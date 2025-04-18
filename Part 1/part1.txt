@@ -1,0 +1,22 @@
+﻿1. How was the camera preview implemented?
+
+
+The camera preview was implemented using the CameraScreen composable called in MainActivity.  This calls CameraPreview, which uses AndroidView to make a PreviewView, showing the live camera feed. The camera is set up using ProcessCameraProvider.getInstance(context), which is used to get an instance of the camera provider. Then when it's ready, bindCameraUseCases() is called to configure the camera. 
+
+
+2. On the bottom sheet, the user can change the settings, e.g., choose a different EfficientNet model while using the app, and the app will start using the new setting. How was this feature implemented?
+
+
+The bottom sheet is implemented using the BottomSheet composable called in MainActivity. It provides buttons for model selection, cpu/mmapi selection, and threshold and result count controls. These have corresponding callbacks to update the Setting state in the ViewModel. The ViewModel uses the changes to update options in the ImageClassificationHelper, allowing them to be used during the next inference.
+
+
+3. How did the app specify which deep learning models to be included in the apk, and where are these two deep learning models stored?
+
+
+The models are enumerated in ImageClassificationHelper. These are downloaded and stored in the assets folder as specified in download_model.gradle, allowing the app to access them.
+
+
+4. What is the data and control flow to run inference on each camera frame and display the result on the bottom sheet?
+
+
+The CameraPreview composable uses a PreviewView to show the camera feed and sets up an ImageAnalysis use case with a custom analyzer (ImageAnalyzer). This analyzer processes each camera frame in real time by converting it to the correct format and passing it to the classifier’s classify() function. The classification result is then passed back through a callback to the MainActivity, which updates the UI state. This updated state is observed in the Compose UI and triggers a recomposition of the BottomSheet to display the latest inference result at the bottom of the screen.
