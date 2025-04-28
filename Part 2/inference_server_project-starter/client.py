@@ -1,4 +1,4 @@
-import cv2
+import cv2 
 import requests
 import io
 from PIL import Image
