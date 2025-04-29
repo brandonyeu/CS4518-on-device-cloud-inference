@@ -17,6 +17,7 @@
 package com.google.aiedge.examples.imageclassification
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -97,10 +98,12 @@ class MainViewModel(private val imageClassificationHelper: ImageClassificationHe
      */
     fun classify(imageProxy: ImageProxy) {
         classificationJob = viewModelScope.launch {
-            imageClassificationHelper.classify(
-                imageProxy.toBitmap(),
-                imageProxy.imageInfo.rotationDegrees,
-            )
+            val bitmap = imageProxy.toBitmap().copy(Bitmap.Config.ARGB_8888, true)
+            if (setting.value.mode == InferenceMode.ON_DEVICE) {
+                imageClassificationHelper.classify(bitmap, imageProxy.imageInfo.rotationDegrees)
+            } else {
+                imageClassificationHelper.classifyRemote(bitmap)
+            }
             imageProxy.close()
         }
     }

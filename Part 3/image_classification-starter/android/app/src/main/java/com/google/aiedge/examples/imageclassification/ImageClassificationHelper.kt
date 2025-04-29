@@ -20,12 +20,19 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.SystemClock
 import android.util.Log
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.io.output.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.json.JSONObject
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.common.ops.NormalizeOp
@@ -141,6 +148,61 @@ class ImageClassificationHelper(
         } catch (e: Exception) {
             Log.i(TAG, "Image classification error occurred: ${e.message}")
             _error.emit(e)
+        }
+    }
+
+    suspend fun classifyRemote(bitmap: Bitmap) {
+        try {
+            withContext(Dispatchers.IO) {
+                // JPEG‐encode the bitmap
+                val baos = ByteArrayOutputStream().apply {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, this)
+                }
+                val imageBytes = baos.toByteArray()
+
+                // Build multipart form body
+                val body = MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart(
+                        "file",
+                        "image.jpg",
+                        RequestBody.create("image/jpeg".toMediaTypeOrNull(), imageBytes)
+                    )
+                    .build()
+
+                // Send to server
+                val request = Request.Builder()
+                    .url("http://10.0.2.2:5050/predict")
+                    .post(body)
+                    .build()
+
+                val client = OkHttpClient()
+                val start = SystemClock.uptimeMillis()
+                client.newCall(request).execute().use { resp ->
+                    if (!resp.isSuccessful) throw Exception("Server error: ${resp.code}")
+
+                    // Parse JSON
+                    val text = resp.body!!.string()
+                    val json = JSONObject(text)
+                    val arr = json.getJSONArray("predictions")
+
+                    // Build categories list
+                    val cats = mutableListOf<Category>()
+                    for (i in 0 until arr.length()) {
+                        val obj = arr.getJSONObject(i)
+                        cats += Category(
+                            label = obj.getString("label"),
+                            score = obj.getDouble("score").toFloat()
+                        )
+                    }
+
+                    val inferenceTime = SystemClock.uptimeMillis() - start
+                    // Emit like on-device does
+                    _classification.emit(ClassificationResult(cats, inferenceTime))
+                }
+            }
+        } catch (e: Exception) {
+            _error.emit(Throwable("Failed to connect to server (is it on?)"))
         }
     }
 
