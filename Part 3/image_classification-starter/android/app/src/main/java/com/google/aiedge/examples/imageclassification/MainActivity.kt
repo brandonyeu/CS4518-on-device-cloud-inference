@@ -96,6 +96,8 @@ class MainActivity : ComponentActivity() {
                             viewModel.setThreshold(it)
                         }, onMaxResultSet = {
                             viewModel.setNumberOfResult(it)
+                        }, onModeSelected = {
+                            viewModel.setMode(it)
                         })
                     }) {
                     Column {
@@ -135,6 +137,7 @@ class MainActivity : ComponentActivity() {
         onDelegateSelected: (ImageClassificationHelper.Delegate) -> Unit,
         onThresholdSet: (value: Float) -> Unit,
         onMaxResultSet: (value: Int) -> Unit,
+        onModeSelected: (InferenceMode) -> Unit
     ) {
         val categories = uiState.categories
         val inferenceTime = uiState.inferenceTime
@@ -222,9 +225,37 @@ class MainActivity : ComponentActivity() {
                     }
                 },
             )
+            Spacer(modifier = Modifier.height(20.dp))
+            InferenceModePicker(
+                current      = uiState.setting.mode,
+                onModeChange = onModeSelected
+            )
         }
     }
 
+    @Composable
+    fun InferenceModePicker(
+        current: InferenceMode,
+        onModeChange: (InferenceMode) -> Unit
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Run on:", Modifier.weight(0.4f))
+            InferenceMode.values().forEach { mode ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
+                    RadioButton(
+                        selected = (mode == current),
+                        onClick  = { onModeChange(mode) }
+                    )
+                    Text(
+                        text     = mode.name.replace("_"," "),
+                        modifier = Modifier
+                            .clickable { onModeChange(mode) }
+                            .padding(start = 4.dp)
+                    )
+                }
+            }
+        }
+    }
 
     // custom UI that renders a dropdown menu with a label
     // It allows the user to select an option from a predefined list of options

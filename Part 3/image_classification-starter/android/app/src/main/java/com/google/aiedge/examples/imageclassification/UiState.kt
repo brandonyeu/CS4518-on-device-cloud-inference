@@ -26,11 +26,14 @@ class UiState(
     val errorMessage: String? = null,
 )
 
+enum class InferenceMode { ON_DEVICE, CLOUD }
+
 @Immutable
 data class Setting(
     val model: ImageClassificationHelper.Model = ImageClassificationHelper.DEFAULT_MODEL,
     val delegate: ImageClassificationHelper.Delegate = ImageClassificationHelper.DEFAULT_DELEGATE,
     val resultCount: Int = ImageClassificationHelper.DEFAULT_RESULT_COUNT,
     val threshold: Float = ImageClassificationHelper.DEFAULT_THRESHOLD,
-    val threadCount: Int = ImageClassificationHelper.DEFAULT_THREAD_COUNT
+    val threadCount: Int = ImageClassificationHelper.DEFAULT_THREAD_COUNT,
+    val mode: InferenceMode = InferenceMode.ON_DEVICE
 )

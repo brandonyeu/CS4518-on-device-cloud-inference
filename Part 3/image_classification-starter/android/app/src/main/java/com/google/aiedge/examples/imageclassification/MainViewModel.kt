@@ -155,6 +155,10 @@ class MainViewModel(private val imageClassificationHelper: ImageClassificationHe
 
     }
 
+    fun setMode(mode: InferenceMode) {
+        setting.update { it.copy(mode = mode) }
+    }
+
     /** Clear error message after it has been consumed*/
     fun errorMessageShown() {
         errorMessage.update { null }
