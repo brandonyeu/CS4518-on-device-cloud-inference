@@ -40,11 +40,19 @@ while True:
     try:
         response = requests.post(SERVER_URL, files={'file': img_byte_arr})
         if response.status_code == 200:
-            # print("Prediction:", response.json().get("predicted_label", "Unknown"))
             json_response = response.json()
-            predicted_label = json_response.get("predicted_label", "Unknown")
-            score = json_response.get("score", 0.0)  # Default to 0.0 if no score is returned
-            print(f"Prediction: {predicted_label} (Score: {score:.2f})")		
+
+            # Get the list of top-5 predictions
+            predictions = json_response.get("predictions", [])
+            if not predictions:
+                print("No predictions returned")
+            else:
+                # Print each of the five
+                for pred in predictions:
+                    label = pred.get("label", "Unknown")
+                    score = pred.get("score", 0.0)
+                    print(f"Prediction: {label} (Score: {score:.2f})")
+                print("")
         else:
             print("Error:", response.json().get("error", "Unknown error"))
     except requests.exceptions.RequestException as e:
