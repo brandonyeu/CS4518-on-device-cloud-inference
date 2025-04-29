@@ -1,0 +1,6 @@
+Brandon Yeu (byeu@wpi.edu)
+Christian Reynolds (cjreynolds1@wpi.edu)
+
+We modified AndroidManifest.xml and added <uses-permission android:name="android.permission.INTERNET"/> so the app can reach the Flask server.
+For the Ui we added a new InferenceMode enum for ON_DEVICE / CLOUD along with a radio button in the bottom sheet for selection. 
+In the MainViewModel we use this to determine whether to use the existing classify function or our new classifyRemote function, which posts the frame to http://10.0.2.2:5050/predict and then emits the results like the classify function did. We also cover any connection exceptions and display a toast to prevent the app from crashing if the server isn't on.
