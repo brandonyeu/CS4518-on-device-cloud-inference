@@ -1,0 +1,4 @@
+Brandon Yeu (byeu@wpi.edu)
+Christian Reynolds (cjreynolds1@wpi.edu)
+
+We modified the inference server to return the top 5 prediction results. We also modified the client to print the top five results when recieving them.
